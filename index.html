@@ -10,28 +10,28 @@ import {
   CheckSquare
 } from 'lucide-react';
 
-// Pre-loaded data derived strictly from the Master Export Documentation Checklist Markdown
+/* Pre-loaded data derived strictly from the Master Export Documentation Checklist Markdown */
 const initialMasterChecklist = [
-  // Table 1: Core Registration
+  /* Table 1: Core Registration */
   { id: 1, doc: "Importer Exporter Code (IEC)", cat: "Compliance", mandatory: "Yes", owner: "Compliance Mgr", issuer: "DGFT", fields: "10-digit Code, Entity Name, PAN", validation: "Verify annual update completed between April-June; ensure PAN matches corporate records exactly.", status: "Pending", remarks: "Required for all ICEGATE customs filings; shipments block without it.", approved: false },
   { id: 2, doc: "Authorized Dealer (AD) Code", cat: "Compliance", mandatory: "Yes", owner: "Finance Exec", issuer: "AD Bank / Customs", fields: "14-digit Bank Code, Port Code", validation: "Verify AD Code is actively registered at the specific physical Port of Loading on the ICEGATE portal.", status: "Pending", remarks: "Blocks generation of the Shipping Bill if missing or mismatched.", approved: false },
   { id: 3, doc: "Registration cum Membership Cert. (RCMC)", cat: "Compliance", mandatory: "Yes", owner: "Compliance Mgr", issuer: "EEPC India / EPC", fields: "Exporter Status, Product Category", validation: "Check expiration date; verify heavy engineering goods categorization aligns with products.", status: "Pending", remarks: "Mandatory for claiming RoDTEP and EPCG benefits.", approved: false },
   { id: 4, doc: "Letter of Undertaking (LUT) Form RFD-11", cat: "Tax / GST", mandatory: "Yes", owner: "Finance Exec", issuer: "GST Portal", fields: "ARN Number, Financial Year", validation: "Verify valid for FY26-27; ensure 'Zero-Rated Supply' eligibility is maintained.", status: "Pending", remarks: "Avoids upfront IGST payment, protecting working capital.", approved: false },
   
-  // Table 2: Pre-Shipment
+  /* Table 2: Pre-Shipment */
   { id: 5, doc: "Purchase Order / Sales Contract", cat: "Commercial", mandatory: "Yes", owner: "Sales / Order Mgt", issuer: "Overseas Buyer", fields: "Item specs, value, Incoterms, Payment terms", validation: "Verify Incoterms 2020 match internal quotes; verify Letter of Credit details if applicable.", status: "Pending", remarks: "Legally binding contract dictating all subsequent documentation.", approved: false },
   { id: 6, doc: "Pro Forma Invoice", cat: "Pre-Shipment", mandatory: "Yes", owner: "Finance Exec", issuer: "Internal (ERP)", fields: "Quotation value, validity, banking details", validation: "Ensure AD bank routing details are exact for swift transfer; clearly state non-binding legal status.", status: "Pending", remarks: "Utilized by the buyer to open the LC with their issuing bank.", approved: false },
   { id: 7, doc: "Commercial Invoice", cat: "Pre-Shipment", mandatory: "Yes", owner: "Finance Exec", issuer: "Internal (ERP)", fields: "8-digit HS Code, VIN/Serial No., Value, Currency", validation: "Cross-check HS Code (e.g., 84314990); ensure exact match with LC terms; verify LUT inclusion text.", status: "Pending", remarks: "Primary valuation document for Customs; determines duty assessment.", approved: false },
   { id: 8, doc: "Export Packing List", cat: "Pre-Shipment", mandatory: "Yes", owner: "Logistics", issuer: "Internal (ERP)", fields: "Gross/Net Weight, Package Dimensions, Marks", validation: "Weights must exactly match Commercial Invoice and VGM; Sequential package numbering verified.", status: "Pending", remarks: "Crucial for Ro-Ro/Breakbulk capacity planning and stowage.", approved: false },
 
-  // Table 3: Technical, Inspection, Logistics
+  /* Table 3: Technical, Inspection, Logistics */
   { id: 9, doc: "Pre-Shipment Inspection (PSI) Cert.", cat: "Inspection", mandatory: "Conditional", owner: "QA / Logistics", issuer: "SGS, TUV, Intertek", fields: "Functional status, quantity, defects, AQL", validation: "Verify equipment serial numbers match Invoice exactly; ensure 'Pass' status for physical condition.", status: "Pending", remarks: "Required by specific destination countries and stringent LCs.", approved: false },
   { id: 10, doc: "Chartered Engineer Certificate (CEC)", cat: "Inspection", mandatory: "Conditional", owner: "Compliance Mgr", issuer: "Empanelled CE", fields: "Remaining life, current value, year of mfg.", validation: "Mandatory for second-hand machinery; verify valuation against Invoice to prevent transfer pricing flags.", status: "Pending", remarks: "Indian Customs requirement for all used heavy equipment exports.", approved: false },
   { id: 11, doc: "ISPM-15 Fumigation / HT Certificate", cat: "Logistics", mandatory: "Yes", owner: "Warehouse Mgr", issuer: "Authorized Fumigator", fields: "IPPC Logo, Country Code, Treatment Type", validation: "Verify all wooden skids/crates bear the physical IPPC mark; Certificate details match WPM count.", status: "Pending", remarks: "Prevents severe biosecurity quarantine and re-export at destination.", approved: false },
   { id: 12, doc: "Lashing Certificate", cat: "Logistics", mandatory: "Yes", owner: "Port Operations", issuer: "Independent Marine Surveyor", fields: "Securing method, tension limits, vessel name", validation: "Confirm compliance with IMO Annex 13; verify lashing points match machinery structural schematics.", status: "Pending", remarks: "Critical for Ro-Ro and Breakbulk sea safety; ship master can refuse cargo.", approved: false },
   { id: 13, doc: "Gate-In e-Form 13", cat: "Logistics", mandatory: "Yes", owner: "CHA / Forwarder", issuer: "ODEX / Terminal", fields: "Truck No., Driver ID, VGM, Shipping Bill No.", validation: "Confirm VGM declared matches Packing List gross weight; ensure OOG dimensions are approved by terminal.", status: "Pending", remarks: "Mandatory for port terminal entry and physical loading.", approved: false },
 
-  // Table 4: Customs, Shipping, Banking
+  /* Table 4: Customs, Shipping, Banking */
   { id: 14, doc: "Shipping Bill (Export)", cat: "Customs", mandatory: "Yes", owner: "CHA", issuer: "ICEGATE", fields: "LEO Date, FOB Value, Reward intent (RoDTEP)", validation: "Verify 'Let Export Order' (LEO) is generated; ensure 'Intent to claim RoDTEP/EPCG' is marked 'Y'.", status: "Pending", remarks: "Legal proof of export filing; gateway to all export incentives.", approved: false },
   { id: 15, doc: "Bill of Lading (BoL)", cat: "Shipping", mandatory: "Yes", owner: "Carrier", issuer: "Shipping Line", fields: "Consignee, Notify Party, Port of Discharge", validation: "'Clean on Board' status required; Consignee details must match LC precisely; check original vs. surrender.", status: "Pending", remarks: "Title document transferring ownership; proof of physical transit.", approved: false },
   { id: 16, doc: "Certificate of Origin (CoO)", cat: "Compliance", mandatory: "Yes", owner: "Compliance Mgr", issuer: "EEPC / Chamber", fields: "Origin criteria, Exporter details, HS Code", validation: "Preferential vs. Non-Preferential matched to buyer needs; Country of Origin explicitly stated.", status: "Pending", remarks: "Determines buyer's import duty rates under Free Trade Agreements.", approved: false },
@@ -59,27 +59,27 @@ export default function ExportChecklistApp() {
   const [checklist, setChecklist] = useState(initialMasterChecklist);
   const [auditList, setAuditList] = useState(initialAuditChecklist);
 
-  // Update Status
+  /* Update Status */
   const handleStatusChange = (id, newStatus) => {
     setChecklist(checklist.map(item => item.id === id ? { ...item, status: newStatus } : item));
   };
 
-  // Update Remarks
+  /* Update Remarks */
   const handleRemarksChange = (id, newRemarks) => {
     setChecklist(checklist.map(item => item.id === id ? { ...item, remarks: newRemarks } : item));
   };
 
-  // Toggle Approval
+  /* Toggle Approval */
   const handleApprovalToggle = (id) => {
     setChecklist(checklist.map(item => item.id === id ? { ...item, approved: !item.approved } : item));
   };
 
-  // Toggle Audit Status
+  /* Toggle Audit Status */
   const handleAuditToggle = (id) => {
     setAuditList(auditList.map(item => item.id === id ? { ...item, completed: !item.completed } : item));
   };
 
-  // Export to CSV Functionality
+  /* Export to CSV Functionality */
   const exportToCSV = () => {
     const headers = ['Document Name', 'Category', 'Mandatory', 'Responsible Person', 'Source / Issuer', 'Key Data Fields', 'Validation Checklist', 'Status', 'Remarks', 'Approved'];
     
@@ -160,7 +160,7 @@ export default function ExportChecklistApp() {
           </button>
         </div>
 
-        {/* --- TAB CONTENT: WORKFLOW --- */}
+        {/* TAB CONTENT: WORKFLOW */}
         {activeTab === 'workflow' && (
           <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
             <h2 className="text-lg font-bold mb-6 border-b pb-2">Chronological Export Workflow Architecture</h2>
@@ -204,7 +204,7 @@ export default function ExportChecklistApp() {
           </div>
         )}
 
-        {/* --- TAB CONTENT: MASTER CHECKLIST --- */}
+        {/* TAB CONTENT: MASTER CHECKLIST */}
         {activeTab === 'master' && (
           <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
             <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
@@ -284,7 +284,7 @@ export default function ExportChecklistApp() {
           </div>
         )}
 
-        {/* --- TAB CONTENT: PRE-DISPATCH AUDIT --- */}
+        {/* TAB CONTENT: PRE-DISPATCH AUDIT */}
         {activeTab === 'audit' && (
           <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
              <div className="mb-6">
@@ -324,7 +324,7 @@ export default function ExportChecklistApp() {
           </div>
         )}
 
-        {/* --- TAB CONTENT: RISK & ERROR CONTROL --- */}
+        {/* TAB CONTENT: RISK & ERROR CONTROL */}
         {activeTab === 'risk' && (
           <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
             <h2 className="text-xl font-bold flex items-center gap-2 mb-6">
