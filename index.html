@@ -1,364 +1,365 @@
-import React, { useState } from 'react';
-import { 
-  FileSpreadsheet, 
-  ShieldCheck, 
-  AlertTriangle, 
-  Activity, 
-  Download, 
-  CheckCircle,
-  Clock,
-  CheckSquare
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RBAS Global Finance - Export Documentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
 
-/* Pre-loaded data derived strictly from the Master Export Documentation Checklist Markdown */
-const initialMasterChecklist = [
-  /* Table 1: Core Registration */
-  { id: 1, doc: "Importer Exporter Code (IEC)", cat: "Compliance", mandatory: "Yes", owner: "Compliance Mgr", issuer: "DGFT", fields: "10-digit Code, Entity Name, PAN", validation: "Verify annual update completed between April-June; ensure PAN matches corporate records exactly.", status: "Pending", remarks: "Required for all ICEGATE customs filings; shipments block without it.", approved: false },
-  { id: 2, doc: "Authorized Dealer (AD) Code", cat: "Compliance", mandatory: "Yes", owner: "Finance Exec", issuer: "AD Bank / Customs", fields: "14-digit Bank Code, Port Code", validation: "Verify AD Code is actively registered at the specific physical Port of Loading on the ICEGATE portal.", status: "Pending", remarks: "Blocks generation of the Shipping Bill if missing or mismatched.", approved: false },
-  { id: 3, doc: "Registration cum Membership Cert. (RCMC)", cat: "Compliance", mandatory: "Yes", owner: "Compliance Mgr", issuer: "EEPC India / EPC", fields: "Exporter Status, Product Category", validation: "Check expiration date; verify heavy engineering goods categorization aligns with products.", status: "Pending", remarks: "Mandatory for claiming RoDTEP and EPCG benefits.", approved: false },
-  { id: 4, doc: "Letter of Undertaking (LUT) Form RFD-11", cat: "Tax / GST", mandatory: "Yes", owner: "Finance Exec", issuer: "GST Portal", fields: "ARN Number, Financial Year", validation: "Verify valid for FY26-27; ensure 'Zero-Rated Supply' eligibility is maintained.", status: "Pending", remarks: "Avoids upfront IGST payment, protecting working capital.", approved: false },
-  
-  /* Table 2: Pre-Shipment */
-  { id: 5, doc: "Purchase Order / Sales Contract", cat: "Commercial", mandatory: "Yes", owner: "Sales / Order Mgt", issuer: "Overseas Buyer", fields: "Item specs, value, Incoterms, Payment terms", validation: "Verify Incoterms 2020 match internal quotes; verify Letter of Credit details if applicable.", status: "Pending", remarks: "Legally binding contract dictating all subsequent documentation.", approved: false },
-  { id: 6, doc: "Pro Forma Invoice", cat: "Pre-Shipment", mandatory: "Yes", owner: "Finance Exec", issuer: "Internal (ERP)", fields: "Quotation value, validity, banking details", validation: "Ensure AD bank routing details are exact for swift transfer; clearly state non-binding legal status.", status: "Pending", remarks: "Utilized by the buyer to open the LC with their issuing bank.", approved: false },
-  { id: 7, doc: "Commercial Invoice", cat: "Pre-Shipment", mandatory: "Yes", owner: "Finance Exec", issuer: "Internal (ERP)", fields: "8-digit HS Code, VIN/Serial No., Value, Currency", validation: "Cross-check HS Code (e.g., 84314990); ensure exact match with LC terms; verify LUT inclusion text.", status: "Pending", remarks: "Primary valuation document for Customs; determines duty assessment.", approved: false },
-  { id: 8, doc: "Export Packing List", cat: "Pre-Shipment", mandatory: "Yes", owner: "Logistics", issuer: "Internal (ERP)", fields: "Gross/Net Weight, Package Dimensions, Marks", validation: "Weights must exactly match Commercial Invoice and VGM; Sequential package numbering verified.", status: "Pending", remarks: "Crucial for Ro-Ro/Breakbulk capacity planning and stowage.", approved: false },
+  <script type="text/babel">
+    const { useState } = React;
 
-  /* Table 3: Technical, Inspection, Logistics */
-  { id: 9, doc: "Pre-Shipment Inspection (PSI) Cert.", cat: "Inspection", mandatory: "Conditional", owner: "QA / Logistics", issuer: "SGS, TUV, Intertek", fields: "Functional status, quantity, defects, AQL", validation: "Verify equipment serial numbers match Invoice exactly; ensure 'Pass' status for physical condition.", status: "Pending", remarks: "Required by specific destination countries and stringent LCs.", approved: false },
-  { id: 10, doc: "Chartered Engineer Certificate (CEC)", cat: "Inspection", mandatory: "Conditional", owner: "Compliance Mgr", issuer: "Empanelled CE", fields: "Remaining life, current value, year of mfg.", validation: "Mandatory for second-hand machinery; verify valuation against Invoice to prevent transfer pricing flags.", status: "Pending", remarks: "Indian Customs requirement for all used heavy equipment exports.", approved: false },
-  { id: 11, doc: "ISPM-15 Fumigation / HT Certificate", cat: "Logistics", mandatory: "Yes", owner: "Warehouse Mgr", issuer: "Authorized Fumigator", fields: "IPPC Logo, Country Code, Treatment Type", validation: "Verify all wooden skids/crates bear the physical IPPC mark; Certificate details match WPM count.", status: "Pending", remarks: "Prevents severe biosecurity quarantine and re-export at destination.", approved: false },
-  { id: 12, doc: "Lashing Certificate", cat: "Logistics", mandatory: "Yes", owner: "Port Operations", issuer: "Independent Marine Surveyor", fields: "Securing method, tension limits, vessel name", validation: "Confirm compliance with IMO Annex 13; verify lashing points match machinery structural schematics.", status: "Pending", remarks: "Critical for Ro-Ro and Breakbulk sea safety; ship master can refuse cargo.", approved: false },
-  { id: 13, doc: "Gate-In e-Form 13", cat: "Logistics", mandatory: "Yes", owner: "CHA / Forwarder", issuer: "ODEX / Terminal", fields: "Truck No., Driver ID, VGM, Shipping Bill No.", validation: "Confirm VGM declared matches Packing List gross weight; ensure OOG dimensions are approved by terminal.", status: "Pending", remarks: "Mandatory for port terminal entry and physical loading.", approved: false },
+    const IconShieldCheck = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+    );
+    const IconActivity = ({ className, size = 24 }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    );
+    const IconFileSpreadsheet = ({ className, size = 24 }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>
+    );
+    const IconCheckSquare = ({ className, size = 24 }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    );
+    const IconAlertTriangle = ({ className, size = 24 }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    );
+    const IconDownload = ({ className, size = 24 }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+    );
+    const IconCheckCircle = ({ className, size = 24 }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    );
+    const IconClock = ({ className, size = 24 }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    );
 
-  /* Table 4: Customs, Shipping, Banking */
-  { id: 14, doc: "Shipping Bill (Export)", cat: "Customs", mandatory: "Yes", owner: "CHA", issuer: "ICEGATE", fields: "LEO Date, FOB Value, Reward intent (RoDTEP)", validation: "Verify 'Let Export Order' (LEO) is generated; ensure 'Intent to claim RoDTEP/EPCG' is marked 'Y'.", status: "Pending", remarks: "Legal proof of export filing; gateway to all export incentives.", approved: false },
-  { id: 15, doc: "Bill of Lading (BoL)", cat: "Shipping", mandatory: "Yes", owner: "Carrier", issuer: "Shipping Line", fields: "Consignee, Notify Party, Port of Discharge", validation: "'Clean on Board' status required; Consignee details must match LC precisely; check original vs. surrender.", status: "Pending", remarks: "Title document transferring ownership; proof of physical transit.", approved: false },
-  { id: 16, doc: "Certificate of Origin (CoO)", cat: "Compliance", mandatory: "Yes", owner: "Compliance Mgr", issuer: "EEPC / Chamber", fields: "Origin criteria, Exporter details, HS Code", validation: "Preferential vs. Non-Preferential matched to buyer needs; Country of Origin explicitly stated.", status: "Pending", remarks: "Determines buyer's import duty rates under Free Trade Agreements.", approved: false },
-  { id: 17, doc: "Marine Insurance Certificate", cat: "Banking", mandatory: "Conditional", owner: "Finance Exec", issuer: "Insurance Provider", fields: "Insured value (CIF + 10%), Voyage", validation: "Verify coverage matches Incoterms (e.g., CIF requires seller insurance); check exact voyage dates.", status: "Pending", remarks: "Protects high-value equipment in transit against catastrophic loss.", approved: false },
-  { id: 18, doc: "FEMA Declaration (EDF)", cat: "Banking", mandatory: "Yes", owner: "Finance Exec", issuer: "Internal", fields: "Value, Consignee, AD Code, Payment terms", validation: "Verify AD Code is correct; ensure compliance with the 15-month realization window per 2026 guidelines.", status: "Pending", remarks: "Statutory requirement for RBI monitoring and EDPMS tracking.", approved: false },
-  { id: 19, doc: "e-BRC", cat: "Banking", mandatory: "Yes", owner: "Finance Exec", issuer: "AD Bank", fields: "Remittance amount, Date, Shipping Bill No.", validation: "Verify status is 'Closed' in EDPMS; ensure remitted amount matches invoice value minus valid bank charges.", status: "Pending", remarks: "Final proof of payment realization; closes the regulatory loop.", approved: false }
-];
+    const initialMasterChecklist = [
+      { id: 1, doc: "Importer Exporter Code (IEC)", cat: "Compliance", mandatory: "Yes", owner: "Compliance Mgr", issuer: "DGFT", fields: "10-digit Code, Entity Name, PAN", validation: "Verify annual update completed between April-June; ensure PAN matches corporate records exactly.", status: "Pending", remarks: "Required for all ICEGATE customs filings; shipments block without it.", approved: false },
+      { id: 2, doc: "Authorized Dealer (AD) Code", cat: "Compliance", mandatory: "Yes", owner: "Finance Exec", issuer: "AD Bank / Customs", fields: "14-digit Bank Code, Port Code", validation: "Verify AD Code is actively registered at the specific physical Port of Loading on the ICEGATE portal.", status: "Pending", remarks: "Blocks generation of the Shipping Bill if missing or mismatched.", approved: false },
+      { id: 3, doc: "Registration cum Membership Cert. (RCMC)", cat: "Compliance", mandatory: "Yes", owner: "Compliance Mgr", issuer: "EEPC India / EPC", fields: "Exporter Status, Product Category", validation: "Check expiration date; verify heavy engineering goods categorization aligns with products.", status: "Pending", remarks: "Mandatory for claiming RoDTEP and EPCG benefits.", approved: false },
+      { id: 4, doc: "Letter of Undertaking (LUT) Form RFD-11", cat: "Tax / GST", mandatory: "Yes", owner: "Finance Exec", issuer: "GST Portal", fields: "ARN Number, Financial Year", validation: "Verify valid for FY26-27; ensure 'Zero-Rated Supply' eligibility is maintained.", status: "Pending", remarks: "Avoids upfront IGST payment, protecting working capital.", approved: false },
+      { id: 5, doc: "Purchase Order / Sales Contract", cat: "Commercial", mandatory: "Yes", owner: "Sales / Order Mgt", issuer: "Overseas Buyer", fields: "Item specs, value, Incoterms, Payment terms", validation: "Verify Incoterms 2020 match internal quotes; verify Letter of Credit details if applicable.", status: "Pending", remarks: "Legally binding contract dictating all subsequent documentation.", approved: false },
+      { id: 6, doc: "Pro Forma Invoice", cat: "Pre-Shipment", mandatory: "Yes", owner: "Finance Exec", issuer: "Internal (ERP)", fields: "Quotation value, validity, banking details", validation: "Ensure AD bank routing details are exact for swift transfer; clearly state non-binding legal status.", status: "Pending", remarks: "Utilized by the buyer to open the LC with their issuing bank.", approved: false },
+      { id: 7, doc: "Commercial Invoice", cat: "Pre-Shipment", mandatory: "Yes", owner: "Finance Exec", issuer: "Internal (ERP)", fields: "8-digit HS Code, VIN/Serial No., Value, Currency", validation: "Cross-check HS Code (e.g., 84314990); ensure exact match with LC terms; verify LUT inclusion text.", status: "Pending", remarks: "Primary valuation document for Customs; determines duty assessment.", approved: false },
+      { id: 8, doc: "Export Packing List", cat: "Pre-Shipment", mandatory: "Yes", owner: "Logistics", issuer: "Internal (ERP)", fields: "Gross/Net Weight, Package Dimensions, Marks", validation: "Weights must exactly match Commercial Invoice and VGM; Sequential package numbering verified.", status: "Pending", remarks: "Crucial for Ro-Ro/Breakbulk capacity planning and stowage.", approved: false },
+      { id: 9, doc: "Pre-Shipment Inspection (PSI) Cert.", cat: "Inspection", mandatory: "Conditional", owner: "QA / Logistics", issuer: "SGS, TUV, Intertek", fields: "Functional status, quantity, defects, AQL", validation: "Verify equipment serial numbers match Invoice exactly; ensure 'Pass' status for physical condition.", status: "Pending", remarks: "Required by specific destination countries and stringent LCs.", approved: false },
+      { id: 10, doc: "Chartered Engineer Certificate (CEC)", cat: "Inspection", mandatory: "Conditional", owner: "Compliance Mgr", issuer: "Empanelled CE", fields: "Remaining life, current value, year of mfg.", validation: "Mandatory for second-hand machinery; verify valuation against Invoice to prevent transfer pricing flags.", status: "Pending", remarks: "Indian Customs requirement for all used heavy equipment exports.", approved: false },
+      { id: 11, doc: "ISPM-15 Fumigation / HT Certificate", cat: "Logistics", mandatory: "Yes", owner: "Warehouse Mgr", issuer: "Authorized Fumigator", fields: "IPPC Logo, Country Code, Treatment Type", validation: "Verify all wooden skids/crates bear the physical IPPC mark; Certificate details match WPM count.", status: "Pending", remarks: "Prevents severe biosecurity quarantine and re-export at destination.", approved: false },
+      { id: 12, doc: "Lashing Certificate", cat: "Logistics", mandatory: "Yes", owner: "Port Operations", issuer: "Independent Marine Surveyor", fields: "Securing method, tension limits, vessel name", validation: "Confirm compliance with IMO Annex 13; verify lashing points match machinery structural schematics.", status: "Pending", remarks: "Critical for Ro-Ro and Breakbulk sea safety; ship master can refuse cargo.", approved: false },
+      { id: 13, doc: "Gate-In e-Form 13", cat: "Logistics", mandatory: "Yes", owner: "CHA / Forwarder", issuer: "ODEX / Terminal", fields: "Truck No., Driver ID, VGM, Shipping Bill No.", validation: "Confirm VGM declared matches Packing List gross weight; ensure OOG dimensions are approved by terminal.", status: "Pending", remarks: "Mandatory for port terminal entry and physical loading.", approved: false },
+      { id: 14, doc: "Shipping Bill (Export)", cat: "Customs", mandatory: "Yes", owner: "CHA", issuer: "ICEGATE", fields: "LEO Date, FOB Value, Reward intent (RoDTEP)", validation: "Verify 'Let Export Order' (LEO) is generated; ensure 'Intent to claim RoDTEP/EPCG' is marked 'Y'.", status: "Pending", remarks: "Legal proof of export filing; gateway to all export incentives.", approved: false },
+      { id: 15, doc: "Bill of Lading (BoL)", cat: "Shipping", mandatory: "Yes", owner: "Carrier", issuer: "Shipping Line", fields: "Consignee, Notify Party, Port of Discharge", validation: "'Clean on Board' status required; Consignee details must match LC precisely; check original vs. surrender.", status: "Pending", remarks: "Title document transferring ownership; proof of physical transit.", approved: false },
+      { id: 16, doc: "Certificate of Origin (CoO)", cat: "Compliance", mandatory: "Yes", owner: "Compliance Mgr", issuer: "EEPC / Chamber", fields: "Origin criteria, Exporter details, HS Code", validation: "Preferential vs. Non-Preferential matched to buyer needs; Country of Origin explicitly stated.", status: "Pending", remarks: "Determines buyer's import duty rates under Free Trade Agreements.", approved: false },
+      { id: 17, doc: "Marine Insurance Certificate", cat: "Banking", mandatory: "Conditional", owner: "Finance Exec", issuer: "Insurance Provider", fields: "Insured value (CIF + 10%), Voyage", validation: "Verify coverage matches Incoterms (e.g., CIF requires seller insurance); check exact voyage dates.", status: "Pending", remarks: "Protects high-value equipment in transit against catastrophic loss.", approved: false },
+      { id: 18, doc: "FEMA Declaration (EDF)", cat: "Banking", mandatory: "Yes", owner: "Finance Exec", issuer: "Internal", fields: "Value, Consignee, AD Code, Payment terms", validation: "Verify AD Code is correct; ensure compliance with the 15-month realization window per 2026 guidelines.", status: "Pending", remarks: "Statutory requirement for RBI monitoring and EDPMS tracking.", approved: false },
+      { id: 19, doc: "e-BRC", cat: "Banking", mandatory: "Yes", owner: "Finance Exec", issuer: "AD Bank", fields: "Remittance amount, Date, Shipping Bill No.", validation: "Verify status is 'Closed' in EDPMS; ensure remitted amount matches invoice value minus valid bank charges.", status: "Pending", remarks: "Final proof of payment realization; closes the regulatory loop.", approved: false }
+    ];
 
-const initialAuditChecklist = [
-  { id: 1, task: "IEC and AD Code Check", desc: "Confirm 10-digit IEC and 14-digit AD code appear exactly as registered on the Shipping Bill and EDF to prevent EDPMS transaction mapping failure.", completed: false },
-  { id: 2, task: "Letter of Credit Word-for-Word Audit", desc: "Original LC vs. Drafted Docs line-by-line verification. Check typos in buyer name, ensure product description matches VERBATIM (punctuation included), and all required copies are present.", completed: false },
-  { id: 3, task: "Valuation Cross-Check", desc: "Unit price × quantity must mathematically equal total invoice value down to the decimal. Marine insurance coverage must cover 110% of CIF value without voyage date gaps.", completed: false },
-  { id: 4, task: "Country of Origin Validation", desc: "Ensure Country of Origin is explicitly stated on the commercial invoice. Re-exports must accurately reflect original country of manufacture and country of export.", completed: false },
-  { id: 5, task: "Signature and Stamping Check", desc: "Verify all documents are signed in blue ink (not black) to differentiate from photocopies. Ensure Commercial Invoice, Packing List, and CoO bear authorized corporate seal.", completed: false }
-];
+    const initialAuditChecklist = [
+      { id: 1, task: "IEC and AD Code Check", desc: "Confirm 10-digit IEC and 14-digit AD code appear exactly as registered on the Shipping Bill and EDF to prevent EDPMS transaction mapping failure.", completed: false },
+      { id: 2, task: "Letter of Credit Word-for-Word Audit", desc: "Original LC vs. Drafted Docs line-by-line verification. Check typos in buyer name, ensure product description matches VERBATIM (punctuation included), and all required copies are present.", completed: false },
+      { id: 3, task: "Valuation Cross-Check", desc: "Unit price × quantity must mathematically equal total invoice value down to the decimal. Marine insurance coverage must cover 110% of CIF value without voyage date gaps.", completed: false },
+      { id: 4, task: "Country of Origin Validation", desc: "Ensure Country of Origin is explicitly stated on the commercial invoice. Re-exports must accurately reflect original country of manufacture and country of export.", completed: false },
+      { id: 5, task: "Signature and Stamping Check", desc: "Verify all documents are signed in blue ink (not black) to differentiate from photocopies. Ensure Commercial Invoice, Packing List, and CoO bear authorized corporate seal.", completed: false }
+    ];
 
-const risksData = [
-  { title: "EDPMS Non-Compliance", desc: "Proceeds must be realized in 15 months (18 for INR). Failure flags company to RBI Caution List, blocking future customs clearance and LC processing.", mitigation: "Automated days-outstanding calculation in Excel. Highlight approaching 12-month marks in red for immediate follow-up with buyer/AD bank." },
-  { title: "Classification Risk", desc: "Using vague terms or generic 4-digit HS codes triggers customs holds, physical exams, and demurrage. Can also trigger export control violations.", mitigation: "Mandate locked drop-down parameter mapping internal SKUs to legally vetted 8-digit ITC-HS codes (e.g., 84314990). No manual entry permitted." },
-  { title: "Breakbulk Lashing Failures", desc: "Improper lashing causes cargo destruction and vessel damage. Missing certificates allow ship master to refuse loading, stranding equipment.", mitigation: "Mandate verified upload of independent marine surveyor Lashing Certificate (IMO Annex 13) with Port Ops manager sign-off before vessel arrives." }
-];
+    const risksData = [
+      { title: "EDPMS Non-Compliance", desc: "Proceeds must be realized in 15 months (18 for INR). Failure flags company to RBI Caution List, blocking future customs clearance and LC processing.", mitigation: "Automated days-outstanding calculation in Excel. Highlight approaching 12-month marks in red for immediate follow-up with buyer/AD bank." },
+      { title: "Classification Risk", desc: "Using vague terms or generic 4-digit HS codes triggers customs holds, physical exams, and demurrage. Can also trigger export control violations.", mitigation: "Mandate locked drop-down parameter mapping internal SKUs to legally vetted 8-digit ITC-HS codes (e.g., 84314990). No manual entry permitted." },
+      { title: "Breakbulk Lashing Failures", desc: "Improper lashing causes cargo destruction and vessel damage. Missing certificates allow ship master to refuse loading, stranding equipment.", mitigation: "Mandate verified upload of independent marine surveyor Lashing Certificate (IMO Annex 13) with Port Ops manager sign-off before vessel arrives." }
+    ];
 
-export default function ExportChecklistApp() {
-  const [activeTab, setActiveTab] = useState('master');
-  const [checklist, setChecklist] = useState(initialMasterChecklist);
-  const [auditList, setAuditList] = useState(initialAuditChecklist);
+    function ExportChecklistApp() {
+      const [activeTab, setActiveTab] = useState('master');
+      const [checklist, setChecklist] = useState(initialMasterChecklist);
+      const [auditList, setAuditList] = useState(initialAuditChecklist);
 
-  /* Update Status */
-  const handleStatusChange = (id, newStatus) => {
-    setChecklist(checklist.map(item => item.id === id ? { ...item, status: newStatus } : item));
-  };
+      const handleStatusChange = (id, newStatus) => {
+        setChecklist(checklist.map(item => item.id === id ? { ...item, status: newStatus } : item));
+      };
 
-  /* Update Remarks */
-  const handleRemarksChange = (id, newRemarks) => {
-    setChecklist(checklist.map(item => item.id === id ? { ...item, remarks: newRemarks } : item));
-  };
+      const handleRemarksChange = (id, newRemarks) => {
+        setChecklist(checklist.map(item => item.id === id ? { ...item, remarks: newRemarks } : item));
+      };
 
-  /* Toggle Approval */
-  const handleApprovalToggle = (id) => {
-    setChecklist(checklist.map(item => item.id === id ? { ...item, approved: !item.approved } : item));
-  };
+      const handleApprovalToggle = (id) => {
+        setChecklist(checklist.map(item => item.id === id ? { ...item, approved: !item.approved } : item));
+      };
 
-  /* Toggle Audit Status */
-  const handleAuditToggle = (id) => {
-    setAuditList(auditList.map(item => item.id === id ? { ...item, completed: !item.completed } : item));
-  };
+      const handleAuditToggle = (id) => {
+        setAuditList(auditList.map(item => item.id === id ? { ...item, completed: !item.completed } : item));
+      };
 
-  /* Export to CSV Functionality */
-  const exportToCSV = () => {
-    const headers = ['Document Name', 'Category', 'Mandatory', 'Responsible Person', 'Source / Issuer', 'Key Data Fields', 'Validation Checklist', 'Status', 'Remarks', 'Approved'];
-    
-    const csvContent = [
-      headers.join(','),
-      ...checklist.map(row => [
-        `"${row.doc}"`,
-        `"${row.cat}"`,
-        `"${row.mandatory}"`,
-        `"${row.owner}"`,
-        `"${row.issuer}"`,
-        `"${row.fields}"`,
-        `"${row.validation}"`,
-        `"${row.status}"`,
-        `"${row.remarks}"`,
-        row.approved ? 'Yes' : 'No'
-      ].join(','))
-    ].join('\n');
+      const exportToCSV = () => {
+        const headers = ['Document Name', 'Category', 'Mandatory', 'Responsible Person', 'Source / Issuer', 'Key Data Fields', 'Validation Checklist', 'Status', 'Remarks', 'Approved'];
+        const csvContentArray = [headers.join(',')];
+        checklist.forEach(row => {
+          const rowData = [
+            '"' + row.doc + '"',
+            '"' + row.cat + '"',
+            '"' + row.mandatory + '"',
+            '"' + row.owner + '"',
+            '"' + row.issuer + '"',
+            '"' + row.fields + '"',
+            '"' + row.validation + '"',
+            '"' + row.status + '"',
+            '"' + row.remarks + '"',
+            row.approved ? 'Yes' : 'No'
+          ];
+          csvContentArray.push(rowData.join(','));
+        });
+        const csvContent = csvContentArray.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "RBAS_Export_Documentation_Checklist.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "RBAS_Export_Documentation_Checklist.csv");
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-      {/* Header */}
-      <header className="bg-slate-900 text-white p-6 shadow-md">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <ShieldCheck className="text-emerald-400" />
-              RBAS Global Finance
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">Export Documentation Tracking & Verification System</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-semibold">Asset Class: Heavy Equipment (India Export)</p>
-            <p className="text-xs text-slate-400">Zero-Defect Compliance Architecture</p>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-screen-2xl mx-auto p-6">
-        
-        {/* Navigation Tabs */}
-        <div className="flex space-x-1 mb-6 border-b border-slate-200">
-          <button 
-            onClick={() => setActiveTab('workflow')}
-            className={`px-5 py-3 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${activeTab === 'workflow' ? 'bg-white border-t border-l border-r border-slate-200 text-slate-900' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
-          >
-            <Activity size={18} /> Workflow Dashboard
-          </button>
-          <button 
-            onClick={() => setActiveTab('master')}
-            className={`px-5 py-3 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${activeTab === 'master' ? 'bg-white border-t border-l border-r border-slate-200 text-slate-900' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
-          >
-            <FileSpreadsheet size={18} /> Master Excel Checklist
-          </button>
-          <button 
-            onClick={() => setActiveTab('audit')}
-            className={`px-5 py-3 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${activeTab === 'audit' ? 'bg-white border-t border-l border-r border-slate-200 text-slate-900' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
-          >
-            <CheckSquare size={18} /> Pre-Dispatch Audit
-          </button>
-          <button 
-            onClick={() => setActiveTab('risk')}
-            className={`px-5 py-3 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 ${activeTab === 'risk' ? 'bg-white border-t border-l border-r border-slate-200 text-slate-900' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
-          >
-            <AlertTriangle size={18} /> Risk & Error Control
-          </button>
-        </div>
-
-        {/* TAB CONTENT: WORKFLOW */}
-        {activeTab === 'workflow' && (
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-            <h2 className="text-lg font-bold mb-6 border-b pb-2">Chronological Export Workflow Architecture</h2>
-            <div className="relative border-l-2 border-slate-200 ml-3 md:ml-6 space-y-8 pb-4">
-              
-              <div className="relative pl-8">
-                <div className="absolute w-6 h-6 bg-emerald-500 rounded-full -left-3 top-1 flex items-center justify-center border-4 border-white shadow">
-                  <CheckCircle size={12} className="text-white" />
-                </div>
-                <h3 className="font-bold text-slate-900">Phase 1: Commercial Initiation & Baseline Compliance</h3>
-                <p className="text-sm text-slate-600 mt-1">Order confirmation. Verification of IEC status (April-June renewal), AD Code port mapping on ICEGATE, and active LUT Form RFD-11 filing for the current financial year to prevent IGST cash flow blocks.</p>
+      return (
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-20">
+          <header className="bg-slate-900 text-white p-6 shadow-md">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                  <IconShieldCheck className="text-emerald-400" />
+                  RBAS Global Finance
+                </h1>
+                <p className="text-slate-400 text-sm mt-1">Export Documentation Tracking & Verification System</p>
               </div>
-
-              <div className="relative pl-8">
-                <div className="absolute w-6 h-6 bg-blue-500 rounded-full -left-3 top-1 flex items-center justify-center border-4 border-white shadow">
-                  <Clock size={12} className="text-white" />
-                </div>
-                <h3 className="font-bold text-slate-900">Phase 2: Technical Prep, Inspection & Biosecurity</h3>
-                <p className="text-sm text-slate-600 mt-1">Pre-Shipment Inspections (SGS/TUV) based on AQL. Chartered Engineer Certificate (CEC) if machinery is second-hand. Absolute requirement: ISPM-15 Heat Treatment/Fumigation of all Wood Packaging Material (WPM) to prevent quarantine.</p>
+              <div className="text-left md:text-right">
+                <p className="text-sm font-semibold">Asset Class: Heavy Equipment (India Export)</p>
+                <p className="text-xs text-slate-400">Zero-Defect Compliance Architecture</p>
               </div>
-
-              <div className="relative pl-8">
-                <div className="absolute w-6 h-6 bg-slate-300 rounded-full -left-3 top-1 border-4 border-white shadow"></div>
-                <h3 className="font-bold text-slate-900">Phase 3: Logistics, Gate-In & Customs Clearance</h3>
-                <p className="text-sm text-slate-600 mt-1">Generation of e-Form 13 for port terminal entry detailing VGM and Out-of-Gauge (OOG) dimensions. Filing electronic Shipping Bill with exact 8-digit ITC-HS Code (e.g., 84314990) and marking intent for RoDTEP/EPCG benefits ('Y').</p>
-              </div>
-
-              <div className="relative pl-8">
-                <div className="absolute w-6 h-6 bg-slate-300 rounded-full -left-3 top-1 border-4 border-white shadow"></div>
-                <h3 className="font-bold text-slate-900">Phase 4: Post-Shipment & Banking Negotiation</h3>
-                <p className="text-sm text-slate-600 mt-1">Issuance of 'Clean on Board' Master Bill of Lading (annotations of VIN/Chassis required for Ro-Ro) and Lashing Certificate for Breakbulk. Consolidation of Commercial Docs + FEMA EDF. Submission to AD Bank within 21 days.</p>
-              </div>
-
-              <div className="relative pl-8">
-                <div className="absolute w-6 h-6 bg-slate-300 rounded-full -left-3 top-1 border-4 border-white shadow"></div>
-                <h3 className="font-bold text-slate-900">Phase 5: EDPMS Closure & FX Realization</h3>
-                <p className="text-sm text-slate-600 mt-1">Tracking foreign inward remittance within RBI 15-month timeline. AD Bank generates ORM, matches to Shipping Bill in EDPMS, and issues e-BRC. Submission of Appendix 5A/5B for EPCG obligation discharge.</p>
-              </div>
-
             </div>
-          </div>
-        )}
+          </header>
 
-        {/* TAB CONTENT: MASTER CHECKLIST */}
-        {activeTab === 'master' && (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-            <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <FileSpreadsheet className="text-blue-600"/> 
-                Active Master Grid
-              </h2>
+          <main className="max-w-screen-2xl mx-auto p-6">
+            <div className="flex flex-wrap space-x-1 mb-6 border-b border-slate-200">
               <button 
-                onClick={exportToCSV}
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+                onClick={() => setActiveTab('workflow')}
+                className={"px-5 py-3 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 " + (activeTab === 'workflow' ? 'bg-white border-t border-l border-r border-slate-200 text-slate-900' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100')}
               >
-                <Download size={16} /> Export to CSV (Excel)
+                <IconActivity size={18} /> Workflow Dashboard
+              </button>
+              <button 
+                onClick={() => setActiveTab('master')}
+                className={"px-5 py-3 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 " + (activeTab === 'master' ? 'bg-white border-t border-l border-r border-slate-200 text-slate-900' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100')}
+              >
+                <IconFileSpreadsheet size={18} /> Master Excel Checklist
+              </button>
+              <button 
+                onClick={() => setActiveTab('audit')}
+                className={"px-5 py-3 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 " + (activeTab === 'audit' ? 'bg-white border-t border-l border-r border-slate-200 text-slate-900' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100')}
+              >
+                <IconCheckSquare size={18} /> Pre-Dispatch Audit
+              </button>
+              <button 
+                onClick={() => setActiveTab('risk')}
+                className={"px-5 py-3 text-sm font-medium rounded-t-lg transition-colors flex items-center gap-2 " + (activeTab === 'risk' ? 'bg-white border-t border-l border-r border-slate-200 text-slate-900' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100')}
+              >
+                <IconAlertTriangle size={18} /> Risk & Error Control
               </button>
             </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left border-collapse">
-                <thead className="bg-slate-100 text-slate-700 text-xs uppercase font-semibold">
-                  <tr>
-                    <th className="px-4 py-3 border-b border-r w-48">Document Name</th>
-                    <th className="px-4 py-3 border-b border-r w-24">Category</th>
-                    <th className="px-2 py-3 border-b border-r w-20 text-center">Mandatory</th>
-                    <th className="px-4 py-3 border-b border-r w-48">Key Data Fields Required</th>
-                    <th className="px-4 py-3 border-b border-r min-w-[250px]">Validation Protocol</th>
-                    <th className="px-4 py-3 border-b border-r w-36">Status</th>
-                    <th className="px-4 py-3 border-b border-r w-48">Remarks / Notes</th>
-                    <th className="px-4 py-3 border-b text-center w-24">Final Approv.</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {checklist.map((row) => (
-                    <tr key={row.id} className={`hover:bg-slate-50 ${row.approved ? 'bg-emerald-50' : ''}`}>
-                      <td className="px-4 py-3 border-r font-medium text-slate-800">{row.doc}</td>
-                      <td className="px-4 py-3 border-r">
-                        <span className="inline-block px-2 py-1 bg-slate-100 rounded text-xs">{row.cat}</span>
-                      </td>
-                      <td className="px-2 py-3 border-r text-center font-bold">
-                        <span className={row.mandatory === 'Yes' ? 'text-red-600' : 'text-amber-600'}>{row.mandatory}</span>
-                      </td>
-                      <td className="px-4 py-3 border-r text-xs text-slate-600">{row.fields}</td>
-                      <td className="px-4 py-3 border-r text-xs leading-relaxed">{row.validation}</td>
-                      <td className="px-4 py-3 border-r">
-                        <select 
-                          value={row.status}
-                          onChange={(e) => handleStatusChange(row.id, e.target.value)}
-                          className={`w-full text-xs font-semibold p-1.5 border rounded outline-none focus:ring-2 focus:ring-blue-500
-                            ${row.status === 'Clear' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 
-                              row.status === 'In Progress' ? 'bg-amber-100 text-amber-800 border-amber-300' : 
-                              'bg-rose-50 text-rose-800 border-rose-200'}`}
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Clear">Clear</option>
-                        </select>
-                      </td>
-                      <td className="px-2 py-2 border-r">
-                        <textarea 
-                          value={row.remarks}
-                          onChange={(e) => handleRemarksChange(row.id, e.target.value)}
-                          className="w-full text-xs p-1.5 border border-slate-200 rounded resize-none h-14 outline-none focus:border-blue-400"
-                          placeholder="Add notes..."
-                        />
-                      </td>
-                      <td className="px-4 py-3 text-center align-middle">
+
+            {activeTab === 'workflow' && (
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <h2 className="text-lg font-bold mb-6 border-b pb-2">Chronological Export Workflow Architecture</h2>
+                <div className="relative border-l-2 border-slate-200 ml-3 md:ml-6 space-y-8 pb-4">
+                  <div className="relative pl-8">
+                    <div className="absolute w-6 h-6 bg-emerald-500 rounded-full -left-3 top-1 flex items-center justify-center border-4 border-white shadow">
+                      <IconCheckCircle size={12} className="text-white" />
+                    </div>
+                    <h3 className="font-bold text-slate-900">Phase 1: Commercial Initiation & Baseline Compliance</h3>
+                    <p className="text-sm text-slate-600 mt-1">Order confirmation. Verification of IEC status (April-June renewal), AD Code port mapping on ICEGATE, and active LUT Form RFD-11 filing for the current financial year to prevent IGST cash flow blocks.</p>
+                  </div>
+                  <div className="relative pl-8">
+                    <div className="absolute w-6 h-6 bg-blue-500 rounded-full -left-3 top-1 flex items-center justify-center border-4 border-white shadow">
+                      <IconClock size={12} className="text-white" />
+                    </div>
+                    <h3 className="font-bold text-slate-900">Phase 2: Technical Prep, Inspection & Biosecurity</h3>
+                    <p className="text-sm text-slate-600 mt-1">Pre-Shipment Inspections (SGS/TUV) based on AQL. Chartered Engineer Certificate (CEC) if machinery is second-hand. Absolute requirement: ISPM-15 Heat Treatment/Fumigation of all Wood Packaging Material (WPM) to prevent quarantine.</p>
+                  </div>
+                  <div className="relative pl-8">
+                    <div className="absolute w-6 h-6 bg-slate-300 rounded-full -left-3 top-1 border-4 border-white shadow"></div>
+                    <h3 className="font-bold text-slate-900">Phase 3: Logistics, Gate-In & Customs Clearance</h3>
+                    <p className="text-sm text-slate-600 mt-1">Generation of e-Form 13 for port terminal entry detailing VGM and Out-of-Gauge (OOG) dimensions. Filing electronic Shipping Bill with exact 8-digit ITC-HS Code (e.g., 84314990) and marking intent for RoDTEP/EPCG benefits ('Y').</p>
+                  </div>
+                  <div className="relative pl-8">
+                    <div className="absolute w-6 h-6 bg-slate-300 rounded-full -left-3 top-1 border-4 border-white shadow"></div>
+                    <h3 className="font-bold text-slate-900">Phase 4: Post-Shipment & Banking Negotiation</h3>
+                    <p className="text-sm text-slate-600 mt-1">Issuance of 'Clean on Board' Master Bill of Lading (annotations of VIN/Chassis required for Ro-Ro) and Lashing Certificate for Breakbulk. Consolidation of Commercial Docs + FEMA EDF. Submission to AD Bank within 21 days.</p>
+                  </div>
+                  <div className="relative pl-8">
+                    <div className="absolute w-6 h-6 bg-slate-300 rounded-full -left-3 top-1 border-4 border-white shadow"></div>
+                    <h3 className="font-bold text-slate-900">Phase 5: EDPMS Closure & FX Realization</h3>
+                    <p className="text-sm text-slate-600 mt-1">Tracking foreign inward remittance within RBI 15-month timeline. AD Bank generates ORM, matches to Shipping Bill in EDPMS, and issues e-BRC. Submission of Appendix 5A/5B for EPCG obligation discharge.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'master' && (
+              <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <IconFileSpreadsheet className="text-blue-600" size={20}/> 
+                    Active Master Grid
+                  </h2>
+                  <button 
+                    onClick={exportToCSV}
+                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors w-full md:w-auto justify-center"
+                  >
+                    <IconDownload size={16} /> Export to CSV (Excel)
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-slate-100 text-slate-700 text-xs uppercase font-semibold">
+                      <tr>
+                        <th className="px-4 py-3 border-b border-r w-48">Document Name</th>
+                        <th className="px-4 py-3 border-b border-r w-24">Category</th>
+                        <th className="px-2 py-3 border-b border-r w-20 text-center">Mandatory</th>
+                        <th className="px-4 py-3 border-b border-r w-48">Key Data Fields Required</th>
+                        <th className="px-4 py-3 border-b border-r min-w-[250px]">Validation Protocol</th>
+                        <th className="px-4 py-3 border-b border-r w-36">Status</th>
+                        <th className="px-4 py-3 border-b border-r w-48">Remarks / Notes</th>
+                        <th className="px-4 py-3 border-b text-center w-24">Final Approv.</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {checklist.map((row) => (
+                        <tr key={row.id} className={"hover:bg-slate-50 " + (row.approved ? 'bg-emerald-50' : '')}>
+                          <td className="px-4 py-3 border-r font-medium text-slate-800">{row.doc}</td>
+                          <td className="px-4 py-3 border-r">
+                            <span className="inline-block px-2 py-1 bg-slate-100 rounded text-xs">{row.cat}</span>
+                          </td>
+                          <td className="px-2 py-3 border-r text-center font-bold">
+                            <span className={row.mandatory === 'Yes' ? 'text-red-600' : 'text-amber-600'}>{row.mandatory}</span>
+                          </td>
+                          <td className="px-4 py-3 border-r text-xs text-slate-600">{row.fields}</td>
+                          <td className="px-4 py-3 border-r text-xs leading-relaxed">{row.validation}</td>
+                          <td className="px-4 py-3 border-r">
+                            <select 
+                              value={row.status}
+                              onChange={(e) => handleStatusChange(row.id, e.target.value)}
+                              className={"w-full text-xs font-semibold p-1.5 border rounded outline-none focus:ring-2 focus:ring-blue-500 " + (row.status === 'Clear' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : row.status === 'In Progress' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-rose-50 text-rose-800 border-rose-200')}
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="In Progress">In Progress</option>
+                              <option value="Clear">Clear</option>
+                            </select>
+                          </td>
+                          <td className="px-2 py-2 border-r">
+                            <textarea 
+                              value={row.remarks}
+                              onChange={(e) => handleRemarksChange(row.id, e.target.value)}
+                              className="w-full text-xs p-1.5 border border-slate-200 rounded resize-none h-14 outline-none focus:border-blue-400"
+                              placeholder="Add notes..."
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-center align-middle">
+                            <input 
+                              type="checkbox" 
+                              checked={row.approved}
+                              onChange={() => handleApprovalToggle(row.id)}
+                              className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'audit' && (
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                 <div className="mb-6">
+                  <h2 className="text-xl font-bold flex items-center gap-2 mb-2">
+                    <IconCheckSquare className="text-blue-600" size={24}/> 
+                    Zero-Error Pre-Dispatch Audit
+                  </h2>
+                  <p className="text-slate-600 text-sm">This rigid, non-negotiable gateway must be fully checked before documents are physically couriered to negotiating banks or shared externally.</p>
+                </div>
+                <div className="space-y-3">
+                  {auditList.map((item) => (
+                    <div 
+                      key={item.id} 
+                      className={"p-4 border rounded-lg flex items-start gap-4 transition-colors cursor-pointer " + (item.completed ? 'bg-emerald-50 border-emerald-200' : 'hover:bg-slate-50 border-slate-200')}
+                      onClick={() => handleAuditToggle(item.id)}
+                    >
+                      <div className="pt-1">
                         <input 
                           type="checkbox" 
-                          checked={row.approved}
-                          onChange={() => handleApprovalToggle(row.id)}
-                          className="w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                          checked={item.completed}
+                          readOnly
+                          className="w-5 h-5 text-emerald-600 rounded border-slate-300 pointer-events-none"
                         />
-                      </td>
-                    </tr>
+                      </div>
+                      <div>
+                        <h3 className={"font-bold " + (item.completed ? 'text-emerald-900 line-through decoration-emerald-300' : 'text-slate-800')}>
+                          {item.task}
+                        </h3>
+                        <p className={"text-sm mt-1 " + (item.completed ? 'text-emerald-700' : 'text-slate-600')}>
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* TAB CONTENT: PRE-DISPATCH AUDIT */}
-        {activeTab === 'audit' && (
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-             <div className="mb-6">
-              <h2 className="text-xl font-bold flex items-center gap-2 mb-2">
-                <CheckSquare className="text-blue-600"/> 
-                Zero-Error Pre-Dispatch Audit
-              </h2>
-              <p className="text-slate-600 text-sm">This rigid, non-negotiable gateway must be fully checked before documents are physically couriered to negotiating banks or shared externally.</p>
-            </div>
-
-            <div className="space-y-3">
-              {auditList.map((item) => (
-                <div 
-                  key={item.id} 
-                  className={`p-4 border rounded-lg flex items-start gap-4 transition-colors cursor-pointer ${item.completed ? 'bg-emerald-50 border-emerald-200' : 'hover:bg-slate-50 border-slate-200'}`}
-                  onClick={() => handleAuditToggle(item.id)}
-                >
-                  <div className="pt-1">
-                    <input 
-                      type="checkbox" 
-                      checked={item.completed}
-                      readOnly
-                      className="w-5 h-5 text-emerald-600 rounded border-slate-300 pointer-events-none"
-                    />
-                  </div>
-                  <div>
-                    <h3 className={`font-bold ${item.completed ? 'text-emerald-900 line-through decoration-emerald-300' : 'text-slate-800'}`}>
-                      {item.task}
-                    </h3>
-                    <p className={`text-sm mt-1 ${item.completed ? 'text-emerald-700' : 'text-slate-600'}`}>
-                      {item.desc}
-                    </p>
-                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* TAB CONTENT: RISK & ERROR CONTROL */}
-        {activeTab === 'risk' && (
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-            <h2 className="text-xl font-bold flex items-center gap-2 mb-6">
-              <AlertTriangle className="text-rose-600"/> 
-              Financial & Customs Risk Mitigation Framework
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {risksData.map((risk, index) => (
-                <div key={index} className="bg-rose-50 border border-rose-100 rounded-lg p-5">
-                  <h3 className="font-bold text-rose-900 text-lg mb-2">{risk.title}</h3>
-                  <div className="mb-4">
-                    <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">The Risk:</span>
-                    <p className="text-sm text-rose-800 mt-1">{risk.desc}</p>
-                  </div>
-                  <div className="bg-white p-3 rounded border border-rose-100">
-                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Mitigation Policy:</span>
-                    <p className="text-sm text-slate-700 mt-1">{risk.mitigation}</p>
-                  </div>
+            {activeTab === 'risk' && (
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <h2 className="text-xl font-bold flex items-center gap-2 mb-6">
+                  <IconAlertTriangle className="text-rose-600" size={24}/> 
+                  Financial & Customs Risk Mitigation Framework
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {risksData.map((risk, index) => (
+                    <div key={index} className="bg-rose-50 border border-rose-100 rounded-lg p-5">
+                      <h3 className="font-bold text-rose-900 text-lg mb-2">{risk.title}</h3>
+                      <div className="mb-4">
+                        <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">The Risk:</span>
+                        <p className="text-sm text-rose-800 mt-1">{risk.desc}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded border border-rose-100">
+                        <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Mitigation Policy:</span>
+                        <p className="text-sm text-slate-700 mt-1">{risk.mitigation}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+                <div className="mt-8 bg-blue-50 border border-blue-100 p-5 rounded-lg">
+                  <h3 className="font-bold text-blue-900 mb-2">Automated Optimization Logic (RoDTEP & EPCG)</h3>
+                  <p className="text-sm text-blue-800">
+                    To capture 0.3% - 0.8% FOB value refunds under <strong>RoDTEP</strong>, ensure CHA marks 'Y' in intent section before LEO generation. Post-export amendments are blocked.
+                    For <strong>EPCG</strong>, Shipping Bill must explicitly reflect Authorization Number to process Appendix 5A/5B for final bond release from Customs.
+                  </p>
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
 
-            <div className="mt-8 bg-blue-50 border border-blue-100 p-5 rounded-lg">
-              <h3 className="font-bold text-blue-900 mb-2">Automated Optimization Logic (RoDTEP & EPCG)</h3>
-              <p className="text-sm text-blue-800">
-                To capture 0.3% - 0.8% FOB value refunds under <strong>RoDTEP</strong>, ensure CHA marks 'Y' in intent section before LEO generation. Post-export amendments are blocked.
-                For <strong>EPCG</strong>, Shipping Bill must explicitly reflect Authorization Number to process Appendix 5A/5B for final bond release from Customs.
-              </p>
-            </div>
-          </div>
-        )}
-
-      </main>
-    </div>
-  );
-}
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<ExportChecklistApp />);
+  </script>
+</body>
+</html>
